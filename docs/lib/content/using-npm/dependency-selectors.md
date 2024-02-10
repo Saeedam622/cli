@@ -62,7 +62,7 @@ The [`npm query`](/commands/npm-query) command exposes a new dependency selector
 - `:path(<path>)` [glob](https://www.npmjs.com/package/glob) matching based on dependencies path relative to the project
 - `:type(<type>)` [based on currently recognized types](https://github.com/npm/npm-package-arg#result-object)
 - `:outdated(<type>)` when a dependency is outdated
-- `:vuln` when a dependency has a known vulnerability
+- `:vuln(<selector>)` when a dependency has a known vulnerability
 
 ##### `:semver(<spec>, [selector], [function])`
 
@@ -106,7 +106,16 @@ Some examples:
 
 The `:vuln` pseudo selector retrieves data from the registry and returns information about which if your dependencies has a known vulnerability.  Only dependencies whose current version matches a vulnerability will be returned.  For example if you have `semver@7.6.0` in your tree, a vulnerability for `semver` which affects versions `<=6.3.1` will not match.
 
+You can also filter results by certain attributes in advisories.  Currently that includes `severity` and `cwe`.  Note that severity filtering is done per severity, it does not include severities "higher" or "lower" than the one specified.
+
 In addition to the filtering performed by the pseudo selector, info about each relevant advisory will be added to the `queryContext` attribute of each node under the `advisories` attribute.
+
+Some examples:
+
+- `:root > .prod:vuln` returns direct production dependencies with any known vulnerability
+- `:vuln([severity=high])` returns only dependencies with a vulnerability with a `high` severity.
+- `:vuln([severity=high],[severity=moderate])` returns only dependencies with a vulnerability with a `high`  or `moderate` severity.
+- `:vuln([cwe=1333])` returns only dependencies with a vulnerability that includes CWE-1333 (ReDoS)
 
 #### [Attribute Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors)
 

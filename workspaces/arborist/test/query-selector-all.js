@@ -100,9 +100,11 @@ t.test('query-selector-all', async t => {
   })
 
   nock('https://registry.npmjs.org')
+    .persist()
     .post('/-/npm/v1/security/advisories/bulk')
     .reply(200, {
-      foo: [{ id: 'test-vuln', vulnerable_versions: '*' }],
+      foo: [{ id: 'test-vuln', vulnerable_versions: '*', severity: 'high', cwe: [] }],
+      sive: [{ id: 'test-vuln', vulnerable_versions: '*', severity: 'low', cwe: ['CWE-123'] }],
       moo: [{ id: 'test-vuln', vulnerable_versions: '<1.0.0' }],
     })
   for (const [pkg, versions] of Object.entries(packumentStubs)) {
@@ -849,7 +851,11 @@ t.test('query-selector-all', async t => {
     [':outdated(nonsense)', [], { before: yesterday }], // again, no results here ever
 
     // vuln pseudo
-    [':vuln', ['foo@2.2.2']],
+    [':vuln', ['foo@2.2.2', 'sive@1.0.0']],
+    [':vuln([severity=high])', ['foo@2.2.2']],
+    [':vuln([cwe])', ['sive@1.0.0']],
+    [':vuln([cwe=123])', ['sive@1.0.0']],
+    [':vuln([severity=critical])', []],
     ['#nomatch:vuln', []], // no network requests are made if the result set is empty
 
     // attr pseudo

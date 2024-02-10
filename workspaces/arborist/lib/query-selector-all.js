@@ -19,6 +19,7 @@ class Results {
   #initialItems
   #inventory
   #outdatedCache = new Map()
+  #vulnCache
   #pendingCombinator
   #results = new Map()
   #targetNode
@@ -437,31 +438,61 @@ class Results {
     if (!this.initialItems.length) {
       return this.initialItems
     }
-    const packages = {}
-    // We have to map the items twice, once to get the request, and a second time to filter off the results of that request
-    this.initialItems.map((node) => {
-      if (node.isProjectRoot || node.package.private) {
-        return
-      }
-      if (!packages[node.name]) {
-        packages[node.name] = []
-      }
-      if (!packages[node.name].includes(node.version)) {
-        packages[node.name].push(node.version)
-      }
-    })
-    const res = await fetch('/-/npm/v1/security/advisories/bulk', {
-      ...this.flatOptions,
-      registry: this.flatOptions.auditRegistry || this.flatOptions.registry,
-      method: 'POST',
-      gzip: true,
-      body: packages,
-    })
-    const advisories = await res.json()
+    if (!this.#vulnCache) {
+      const packages = {}
+      // We have to map the items twice, once to get the request, and a second time to filter out the results of that request
+      this.initialItems.map((node) => {
+        if (node.isProjectRoot || node.package.private) {
+          return
+        }
+        if (!packages[node.name]) {
+          packages[node.name] = []
+        }
+        if (!packages[node.name].includes(node.version)) {
+          packages[node.name].push(node.version)
+        }
+      })
+      const res = await fetch('/-/npm/v1/security/advisories/bulk', {
+        ...this.flatOptions,
+        registry: this.flatOptions.auditRegistry || this.flatOptions.registry,
+        method: 'POST',
+        gzip: true,
+        body: packages,
+      })
+      this.#vulnCache = await res.json()
+    }
+    const advisories = this.#vulnCache
+    const { vulns } = this.currentAstNode
     return this.initialItems.filter(item => {
-      const vulnerable = advisories[item.name]?.filter(advisory =>
-        semver.intersects(advisory.vulnerable_versions, item.version)
-      )
+      const vulnerable = advisories[item.name]?.filter(advisory => {
+        // This could be for another version of this package elsewhere in the tree
+        if (!semver.intersects(advisory.vulnerable_versions, item.version)) {
+          return false
+        }
+        if (!vulns) {
+          return true
+        }
+        // vulns are OR with each other, if any one matches we're done
+        for (const vuln of vulns) {
+          if (vuln.severity && !vuln.severity.includes('*')) {
+            if (!vuln.severity.includes(advisory.severity)) {
+              continue
+            }
+          }
+
+          if (vuln?.cwe) {
+            // * is special, it means "has a cwe"
+            if (vuln.cwe.includes('*')) {
+              if (!advisory.cwe.length) {
+                continue
+              }
+            } else if (!vuln.cwe.every(cwe => advisory.cwe.includes(`CWE-${cwe}`))) {
+              continue
+            }
+          }
+          return true
+        }
+      })
       if (vulnerable?.length) {
         item.queryContext = {
           advisories: vulnerable,
