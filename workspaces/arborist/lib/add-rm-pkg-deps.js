@@ -125,7 +125,7 @@ const deleteSubKey = (pkg, depType, name, replacedBy) => {
 }
 
 const rm = (pkg, rm) => {
-  for (const depType of new Set(saveTypeMap.values())) {
+  for (const depType of saveTypeMap.values()) {
     for (const name of rm) {
       deleteSubKey(pkg, depType, name)
     }
