@@ -16,7 +16,6 @@ const realpath = require('../realpath.js')
 
 // public symbols
 const _changePath = Symbol.for('_changePath')
-const _global = Symbol.for('global')
 const _setWorkspaces = Symbol.for('setWorkspaces')
 const _rpcache = Symbol.for('realpathCache')
 const _stcache = Symbol.for('statCache')
@@ -44,8 +43,6 @@ module.exports = cls => class ActualLoader extends cls {
 
   constructor (options) {
     super(options)
-
-    this[_global] = !!options.global
 
     // the tree of nodes on disk
     this.actualTree = options.actualTree
