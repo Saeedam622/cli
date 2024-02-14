@@ -48,7 +48,6 @@ const mixins = [
 
 const _setWorkspaces = Symbol.for('setWorkspaces')
 const Base = mixins.reduce((a, b) => b(a), require('events'))
-const getWorkspaceNodes = require('../get-workspace-nodes.js')
 
 // if it's 1, 2, or 3, set it explicitly that.
 // if undefined or null, set it null
@@ -73,14 +72,18 @@ class Arborist extends Base {
       nodeVersion: process.version,
       ...options,
       Arborist: this.constructor,
+      binLinks: 'binLinks' in options ? !!options.binLinks : true,
       cache: options.cache || `${homedir()}/.npm/_cacache`,
       force: !!options.force,
       global: !!options.global,
+      ignoreScripts: !!options.ignoreScripts,
       installStrategy: options.global ? 'shallow' : (options.installStrategy ? options.installStrategy : 'hoisted'),
       lockfileVersion: lockfileVersion(options.lockfileVersion),
       packumentCache: options.packumentCache || new Map(),
       path: options.path || '.',
+      rebuildBundle: 'rebuildBundle' in options ? !!options.rebuildBundle : true,
       replaceRegistryHost: options.replaceRegistryHost,
+      scriptShell: options.scriptShell,
       workspaces: options.workspaces || [],
       workspacesEnabled: options.workspacesEnabled !== false,
     }
