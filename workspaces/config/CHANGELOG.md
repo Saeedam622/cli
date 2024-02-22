@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.2.0](https://github.com/npm/cli/compare/config-v8.1.0...config-v8.2.0) (2024-02-22)
+
+### Features
+
+* [`4f3ddbb`](https://github.com/npm/cli/commit/4f3ddbbe88df7c94d1e06e660928a962e973f332) [#5966](https://github.com/npm/cli/pull/5966) add --expect-entries to `npm query` (@wraithgar)
+
 ## [8.1.0](https://github.com/npm/cli/compare/config-v8.0.3...config-v8.1.0) (2024-01-10)
 
 ### Features
